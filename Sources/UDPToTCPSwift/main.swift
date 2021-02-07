@@ -28,7 +28,7 @@ struct Convert: ParsableCommand {
             logger.logLevel = .debug
         }
 
-        let tcpOrganizer = TCPCLientOrganizer()
+        let tcpOrganizer = TCPCLientOrganizer(logger: logger)
 
         let server = try UDPServer(port: from)
         let to = self.to

@@ -7,6 +7,7 @@
 
 import Foundation
 import Socket
+import Logging
 #if os(Linux)
     import Glibc
 #else
@@ -15,9 +16,12 @@ import Socket
 
 class TCPCLientOrganizer {
 
+    let logger: Logger?
+
     private var registeredClients: [Socket.Address: Socket] = [:]
 
-    init() {
+    init(logger: Logger? = nil) {
+        self.logger = logger
     }
 
     func register(tcp: Socket, for address: Socket.Address) {
@@ -48,6 +52,7 @@ class TCPCLientOrganizer {
                 if (ret == nil || ret == 0) && socket.remoteConnectionClosed {
                     socket.close()
                     self.delete(for: address)
+                    self.logger?.debug("TCP Connection was closed by the Server")
                 } else {
                     callback(data)
                 }
