@@ -23,7 +23,10 @@ struct Convert: ParsableCommand {
     mutating func run() throws {
         let termQueue = DispatchQueue(label: "kill")
 
-        let logger = Logger(label: "com.koraykoska.UDPToTCP")
+        var logger = Logger(label: "com.koraykoska.UDPToTCP")
+        if verbose {
+            logger.logLevel = .debug
+        }
 
         let tcpOrganizer = TCPCLientOrganizer()
 
@@ -31,6 +34,9 @@ struct Convert: ParsableCommand {
         let to = self.to
         let toPort = self.toPort
         server.messageCallback = { data, from in
+            logger.debug("Got UDP message")
+            logger.debug("---------------")
+            logger.debug("\(data.hexEncodedString())")
             guard let from = from else {
                 return
             }
@@ -53,6 +59,9 @@ struct Convert: ParsableCommand {
                     }
 
                     tcpOrganizer.registerReadCallback(for: from) { data in
+                        logger.debug("Got TCP message")
+                        logger.debug("---------------")
+                        logger.debug("\(data.hexEncodedString())")
                         do {
                             try server.send(data: data, to: from)
                         } catch {
