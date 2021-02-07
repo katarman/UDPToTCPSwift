@@ -119,46 +119,30 @@ extension in_addr: Equatable, Hashable {
 
 extension sockaddr_in6: Equatable, Hashable {
     public static func == (lhs: sockaddr_in6, rhs: sockaddr_in6) -> Bool {
-        return lhs.sin6_family == rhs.sin6_family && lhs.sin6_port == rhs.sin6_port && lhs.sin6_flowinfo == rhs.sin6_flowinfo && lhs.sin6_addr == rhs.sin6_addr && lhs.sin6_scope_id == rhs.sin6_scope_id
+        var addr = lhs.sin6_addr
+        let pointer = UnsafeBufferPointer(start: UnsafePointer(&addr), count: MemoryLayout<in6_addr>.size)
+        let rawPointer = UnsafeRawBufferPointer(UnsafeMutableBufferPointer(mutating: pointer))
+        let lAddr = [UInt8](rawPointer)
+
+        var addrR = lhs.sin6_addr
+        let pointerR = UnsafeBufferPointer(start: UnsafePointer(&addrR), count: MemoryLayout<in6_addr>.size)
+        let rawPointerR = UnsafeRawBufferPointer(UnsafeMutableBufferPointer(mutating: pointerR))
+        let rAddr = [UInt8](rawPointerR)
+
+        return lhs.sin6_family == rhs.sin6_family && lhs.sin6_port == rhs.sin6_port && lhs.sin6_flowinfo == rhs.sin6_flowinfo && lhs.sin6_scope_id == rhs.sin6_scope_id && lAddr == rAddr
     }
 
     public func hash(into hasher: inout Hasher) {
+        var addr = sin6_addr
+        let pointer = UnsafeBufferPointer(start: UnsafePointer(&addr), count: MemoryLayout<in6_addr>.size)
+        let rawPointer = UnsafeRawBufferPointer(UnsafeMutableBufferPointer(mutating: pointer))
+        let rawAddr = [UInt8](rawPointer)
+
         hasher.combine(sin6_family)
         hasher.combine(sin6_port)
         hasher.combine(sin6_flowinfo)
-        hasher.combine(sin6_addr)
+        hasher.combine(rawAddr)
         hasher.combine(sin6_scope_id)
-    }
-}
-
-extension in6_addr: Equatable, Hashable {
-    public static func == (lhs: in6_addr, rhs: in6_addr) -> Bool {
-        return lhs.__u6_addr == rhs.__u6_addr
-    }
-
-    public func hash(into hasher: inout Hasher) {
-        hasher.combine(__u6_addr)
-    }
-}
-
-extension in6_addr.__Unnamed_union___u6_addr: Equatable, Hashable {
-    public static func == (lhs: in6_addr.__Unnamed_union___u6_addr, rhs: in6_addr.__Unnamed_union___u6_addr) -> Bool {
-        return lhs.__u6_addr8 == rhs.__u6_addr8 && lhs.__u6_addr16 == rhs.__u6_addr16 && lhs.__u6_addr32 == rhs.__u6_addr32
-    }
-
-    public func hash(into hasher: inout Hasher) {
-        var tmp8 = __u6_addr8
-        let arr_8 = [__uint8_t](UnsafeBufferPointer(start: &tmp8.0, count: MemoryLayout.size(ofValue: tmp8)))
-
-        var tmp16 = __u6_addr16
-        let arr_16 = [__uint16_t](UnsafeBufferPointer(start: &tmp16.0, count: MemoryLayout.size(ofValue: tmp16)))
-
-        var tmp32 = __u6_addr32
-        let arr_32 = [__uint32_t](UnsafeBufferPointer(start: &tmp32.0, count: MemoryLayout.size(ofValue: tmp32)))
-
-        hasher.combine(arr_8)
-        hasher.combine(arr_16)
-        hasher.combine(arr_32)
     }
 }
 
@@ -181,20 +165,4 @@ extension sockaddr_un: Equatable, Hashable {
 
         hasher.combine(sunArr)
     }
-}
-
-func == <T:Equatable> (tuple1: (T, T, T, T), tuple2: (T, T, T, T)) -> Bool {
-    return tuple1.0 == tuple2.0 && tuple1.1 == tuple2.1 && tuple1.2 == tuple2.2 && tuple1.3 == tuple2.3
-}
-
-func == <T:Equatable> (tuple1: (T, T, T, T, T, T, T, T), tuple2: (T, T, T, T, T, T, T, T)) -> Bool {
-    return tuple1.0 == tuple2.0 && tuple1.1 == tuple2.1 && tuple1.2 == tuple2.2 && tuple1.3 == tuple2.3 &&
-        tuple1.4 == tuple2.4 && tuple1.5 == tuple2.5 && tuple1.6 == tuple2.6 && tuple1.7 == tuple2.7
-}
-
-func == <T:Equatable> (tuple1: (T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T), tuple2: (T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T)) -> Bool {
-    return tuple1.0 == tuple2.0 && tuple1.1 == tuple2.1 && tuple1.2 == tuple2.2 && tuple1.3 == tuple2.3 &&
-        tuple1.4 == tuple2.4 && tuple1.5 == tuple2.5 && tuple1.6 == tuple2.6 && tuple1.7 == tuple2.7 &&
-        tuple1.8 == tuple2.8 && tuple1.9 == tuple2.9 && tuple1.10 == tuple2.10 && tuple1.11 == tuple2.11 &&
-        tuple1.12 == tuple2.12 && tuple1.13 == tuple2.13 && tuple1.14 == tuple2.14 && tuple1.15 == tuple2.15
 }
