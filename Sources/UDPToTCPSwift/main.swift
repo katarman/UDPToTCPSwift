@@ -38,9 +38,11 @@ struct Convert: ParsableCommand {
             logger.debug("---------------")
             logger.debug("\(data.hexEncodedString())")
             guard let from = from else {
+                logger.warning("No origin detected. Skipping redirect.")
                 return
             }
             if let socket = tcpOrganizer.get(for: from) {
+                logger.debug("Sending message to existing TCP Socket.")
                 do {
                     try socket.write(from: data)
                 } catch {
@@ -48,6 +50,7 @@ struct Convert: ParsableCommand {
                     logger.error("\(error)")
                 }
             } else {
+                logger.debug("Sending message to new TCP Socket.")
                 if let socket = try? Socket.create(family: .inet, type: .stream, proto: .tcp), let _ = try? socket.connect(to: to, port: toPort) {
                     tcpOrganizer.register(tcp: socket, for: from)
 
