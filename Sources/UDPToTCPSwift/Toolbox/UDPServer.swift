@@ -54,10 +54,12 @@ class UDPServer: SocketServer {
         listenQueue.async {
             while self.shouldRun {
                 var data = Data()
-                if let ret = try! self.socket.listen(forMessage: &data, on: self.port) {
+                if let ret = try? self.socket.listen(forMessage: &data, on: self.port) {
                     self.callbackQueue.async {
                         self.messageCallback?(data, ret.address)
                     }
+                } else {
+                    self.stop()
                 }
             }
         }
