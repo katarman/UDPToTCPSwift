@@ -8,7 +8,7 @@
 import Foundation
 import Socket
 
-class UDPServer: SocketServer {
+class UDPServer {
 
     // MARK: - Properties
 
@@ -29,6 +29,7 @@ class UDPServer: SocketServer {
 
         let socket = try Socket.create(family: .inet, type: .datagram, proto: .udp)
         try socket.listen(on: port, node: "0.0.0.0")
+        try socket.setReadTimeout(value: 1000)
         self.socket = socket
 
         self.shouldRun = true
@@ -53,11 +54,16 @@ class UDPServer: SocketServer {
 
     private func setupListener() {
         listenQueue.async {
-            while self.shouldRun {
+            while self.shouldRun && self.socket.isActive {
                 var data = Data()
                 if let ret = try? self.socket.readDatagram(into: &data) {
                     if ret.bytesRead <= 0 {
-                        self.stop()
+                        if errno == EAGAIN {
+                            // Timeout occured. Try again.
+                            continue
+                        } else {
+                            self.stop()
+                        }
                     } else {
                         self.callbackQueue.async {
                             self.messageCallback?(data, ret.address)
@@ -67,6 +73,8 @@ class UDPServer: SocketServer {
                     self.stop()
                 }
             }
+
+            self.stop()
         }
     }
 }
