@@ -28,6 +28,7 @@ class UDPServer: SocketServer {
         self.port = port
 
         let socket = try Socket.create(family: .inet, type: .datagram, proto: .udp)
+        try socket.listen(on: port, node: "0.0.0.0")
         self.socket = socket
 
         self.shouldRun = true
@@ -54,9 +55,13 @@ class UDPServer: SocketServer {
         listenQueue.async {
             while self.shouldRun {
                 var data = Data()
-                if let ret = try? self.socket.listen(forMessage: &data, on: self.port) {
-                    self.callbackQueue.async {
-                        self.messageCallback?(data, ret.address)
+                if let ret = try? self.socket.readDatagram(into: &data) {
+                    if ret.bytesRead <= 0 {
+                        self.stop()
+                    } else {
+                        self.callbackQueue.async {
+                            self.messageCallback?(data, ret.address)
+                        }
                     }
                 } else {
                     self.stop()
