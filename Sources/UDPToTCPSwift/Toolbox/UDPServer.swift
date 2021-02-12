@@ -29,7 +29,6 @@ class UDPServer {
 
         let socket = try Socket.create(family: .inet, type: .datagram, proto: .udp)
         try socket.listen(on: port, node: "0.0.0.0")
-        try socket.setReadTimeout(value: 1000)
         self.socket = socket
 
         self.shouldRun = true
@@ -58,12 +57,7 @@ class UDPServer {
                 var data = Data()
                 if let ret = try? self.socket.readDatagram(into: &data) {
                     if ret.bytesRead <= 0 {
-                        if errno == EAGAIN {
-                            // Timeout occured. Try again.
-                            continue
-                        } else {
-                            self.stop()
-                        }
+                        self.stop()
                     } else {
                         self.callbackQueue.async {
                             self.messageCallback?(data, ret.address)
